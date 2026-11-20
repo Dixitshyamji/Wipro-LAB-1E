@@ -1,17 +1,9 @@
-// ============================================================
-// Task 4: Demonstrate a strong reference cycle, then fix it.
-// ============================================================
+
 
 import Foundation
-
-// ─────────────────────────────────────────────────────────────
-// PART A — Strong Reference Cycle (THE PROBLEM)
-// ─────────────────────────────────────────────────────────────
-
-// Scenario 1: Cycle between two class instances
 class Student {
     let name: String
-    var enrolledCourse: EnrolledCourse?   // strong ➜ Student ──► EnrolledCourse
+    var enrolledCourse: EnrolledCourse?   
 
     init(name: String) {
         self.name = name
@@ -22,7 +14,7 @@ class Student {
 
 class EnrolledCourse {
     let title: String
-    var student: Student?                 // strong ➜ EnrolledCourse ──► Student (CYCLE!)
+    var student: Student?                 
 
     init(title: String) {
         self.title = title
@@ -36,23 +28,20 @@ func demonstrateCycle() {
     var studentA: Student?       = Student(name: "Ram")
     var courseA: EnrolledCourse? = EnrolledCourse(title: "Swift Programming")
 
-    studentA?.enrolledCourse = courseA   // Student → EnrolledCourse (RC = 2 on course)
-    courseA?.student         = studentA  // EnrolledCourse → Student (RC = 2 on student)
+    studentA?.enrolledCourse = courseA   
+    courseA?.student         = studentA  
 
     print("Setting both variables to nil…")
-    studentA = nil   // RC of Student drops to 1 (EnrolledCourse still holds it)
-    courseA  = nil   // RC of EnrolledCourse drops to 1 (Student still holds it)
-    // ⚠️ Neither deinit fires — MEMORY LEAK
+    studentA = nil   
+    courseA  = nil   
     print("⚠️  No deinit messages above = Memory Leak confirmed!\n")
 }
 
-// ─────────────────────────────────────────────────────────────
-// PART B — Fixed with weak reference
-// ─────────────────────────────────────────────────────────────
+
 
 class StudentFixed {
     let name: String
-    var enrolledCourse: EnrolledCourseFixed?   // strong
+    var enrolledCourse: EnrolledCourseFixed?
 
     init(name: String) {
         self.name = name
@@ -63,7 +52,7 @@ class StudentFixed {
 
 class EnrolledCourseFixed {
     let title: String
-    weak var student: StudentFixed?            // ⬅ weak — breaks the cycle
+    weak var student: StudentFixed?            
 
     init(title: String) {
         self.title = title
@@ -77,23 +66,19 @@ func demonstrateFixedCycle() {
     var studentB: StudentFixed?       = StudentFixed(name: "Ram")
     var courseB: EnrolledCourseFixed? = EnrolledCourseFixed(title: "Swift Programming")
 
-    studentB?.enrolledCourse = courseB   // strong
-    courseB?.student         = studentB  // weak — does NOT bump RC
+    studentB?.enrolledCourse = courseB   
+    courseB?.student         = studentB  
 
     print("Setting both variables to nil…")
-    studentB = nil   // RC of StudentFixed drops to 0 → deinit fires
-    courseB  = nil   // RC of EnrolledCourseFixed drops to 0 → deinit fires
-    // ✅ Both deinits fire — no leak
+    studentB = nil   
+    courseB  = nil   
     print("✅  Both objects deallocated correctly!\n")
 }
 
-// ─────────────────────────────────────────────────────────────
-// PART C — Closure Capture Cycle (another common pattern)
-// ─────────────────────────────────────────────────────────────
 
 class LectureSession {
     let topic: String
-    var onComplete: (() -> Void)?   // stored closure
+    var onComplete: (() -> Void)?   
 
     init(topic: String) {
         self.topic = topic
@@ -101,14 +86,12 @@ class LectureSession {
     }
     deinit { print("[LectureSession] '\(topic)' deallocated. ✅") }
 
-    // ❌ PROBLEM: closure captures self strongly → cycle
     func setupCycleHandler() {
         onComplete = {
-            print("Completed lecture on: \(self.topic)")  // implicit strong capture
+            print("Completed lecture on: \(self.topic)") 
         }
     }
 
-    // ✅ FIX: capture list [weak self]
     func setupSafeHandler() {
         onComplete = { [weak self] in
             guard let self = self else { return }
@@ -122,18 +105,17 @@ func demonstrateClosureCycle() {
     var session1: LectureSession? = LectureSession(topic: "ARC Deep Dive")
     session1?.setupCycleHandler()
     print("Setting session1 to nil…")
-    session1 = nil   // ⚠️ No deinit — cycle prevents deallocation
+    session1 = nil   
     print("⚠️  No deinit = Memory Leak from closure cycle!\n")
 
     print("--- C2: Closure Capture Cycle Fixed with [weak self] ---")
     var session2: LectureSession? = LectureSession(topic: "ARC Deep Dive")
     session2?.setupSafeHandler()
     print("Setting session2 to nil…")
-    session2 = nil   // ✅ Deinit fires
+    session2 = nil   
     print("✅  Closure cycle resolved with [weak self]!\n")
 }
 
-// MARK: - Demo
 func runTask4() {
     print("\n========== TASK 4 ==========")
     demonstrateCycle()
