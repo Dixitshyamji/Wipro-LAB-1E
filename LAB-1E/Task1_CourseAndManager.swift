@@ -1,11 +1,6 @@
-// ============================================================
-// Task 1: Model a Course using a struct and a CourseManager using a class
-// ============================================================
+
 
 import Foundation
-
-// MARK: - Course (Value Type — Struct)
-/// A struct models a Course. Each copy is independent.
 struct Course {
     var title: String
     var code: String
@@ -24,9 +19,6 @@ struct Course {
     }
 }
 
-// MARK: - CourseManager (Reference Type — Class)
-/// A class manages a shared mutable list of courses.
-/// Multiple references point to the same underlying object.
 class CourseManager {
     var courses: [Course] = []
 
@@ -48,7 +40,6 @@ class CourseManager {
     }
 }
 
-// MARK: - Demo
 func runTask1() {
     print("========== TASK 1 ==========")
 
