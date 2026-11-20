@@ -1,40 +1,5 @@
-// ============================================================
-// Task 5: Explain value/reference semantics and ARC ownership.
-//         Demonstrates that value types do NOT always live on
-//         the stack — the type system, not memory location,
-//         defines value semantics.
-// ============================================================
-
 import Foundation
 
-// MARK: - Value Semantics vs Reference Semantics (Conceptual)
-
-/*
- ═══════════════════════════════════════════════════════════════
-  VALUE SEMANTICS
- ═══════════════════════════════════════════════════════════════
-  • Defined by: each copy of a value is independent.
-  • Swift types with value semantics: struct, enum, tuple,
-    and standard-library types (Array, Dictionary, String).
-  • Copy-on-Write (CoW): Swift collection types use a heap
-    buffer internally, but behave as if they copy immediately.
-    The copy is deferred until a mutation is performed.
-  • Key insight: a struct CAN be allocated on the HEAP when:
-      – It is captured by a closure (escaping).
-      – It is stored inside a class instance.
-      – It contains reference-type properties.
-    "Value type" means copy-semantics, NOT "lives on the stack".
- ═══════════════════════════════════════════════════════════════
-  REFERENCE SEMANTICS
- ═══════════════════════════════════════════════════════════════
-  • Defined by: all variables that hold the same object share
-    one piece of heap memory.
-  • Swift types with reference semantics: class, actor,
-    closures (function references).
-  • Assignment copies the pointer, not the data.
- ═══════════════════════════════════════════════════════════════
-  ARC — AUTOMATIC REFERENCE COUNTING
- ═══════════════════════════════════════════════════════════════
   ARC tracks the number of "strong" references to each
   heap-allocated class instance.
 
@@ -55,38 +20,33 @@ import Foundation
  ═══════════════════════════════════════════════════════════════
 */
 
-// MARK: - Demonstration: Struct on the Heap
 
-// A struct captured by an escaping closure is heap-allocated
 struct Counter {
     var count: Int = 0
     mutating func increment() { count += 1 }
 }
 
 func capturedOnHeap() -> () -> Int {
-    var c = Counter()       // c is a struct, but…
+    var c = Counter()     
     return {
-        c.increment()       // …the closure captures c → c lives on the heap
+        c.increment()
         return c.count
     }
 }
 
-// MARK: - Demonstration: Copy-on-Write with Array
 
 func demonstrateCoW() {
     print("\n--- Copy-on-Write (Array) ---")
     var a = [1, 2, 3]
-    var b = a               // No heap copy yet — both share the same buffer
+    var b = a               
 
-    // The moment b is mutated, Swift makes a fresh copy of the buffer
     b.append(4)
 
-    print("a: \(a)")        // [1, 2, 3] — unchanged
-    print("b: \(b)")        // [1, 2, 3, 4] — independent after CoW
+    print("a: \(a)")        
+    print("b: \(b)")        
     print("Array uses value semantics via CoW even though it uses heap storage. ✅")
 }
 
-// MARK: - Demonstration: ARC ownership in action
 
 class Document {
     let name: String
@@ -99,9 +59,9 @@ class Document {
 
 func demonstrateARC() {
     print("\n--- ARC Ownership ---")
-    var ref1: Document? = Document(name: "Lab Report")  // RC = 1
-    var ref2: Document? = ref1                           // RC = 2
-    var ref3: Document? = ref1                           // RC = 3
+    var ref1: Document? = Document(name: "Lab Report")  
+    var ref2: Document? = ref1                           
+    var ref3: Document? = ref1                           
 
     print("Three strong references held.")
     ref1 = nil; print("ref1 set to nil (RC = 2)")
@@ -109,14 +69,13 @@ func demonstrateARC() {
     ref3 = nil; print("ref3 set to nil (RC = 0) → deinit called:")
 }
 
-// MARK: - Main entry point
+
 
 func runTask5() {
     print("\n========== TASK 5 ==========")
 
     let counter = capturedOnHeap()
     print("Counter (struct captured on heap): \(counter()), \(counter()), \(counter())")
-    // Outputs: 1, 2, 3 — struct mutation persists because it lives on the heap
 
     demonstrateCoW()
     demonstrateARC()
